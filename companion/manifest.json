@@ -17,10 +17,5 @@
 	},
 	"keywords": ["osc"],
 	"products": ["OSC"],
-	"usbIds": [
-		{
-			"vendorId": 4661,
-			"productIds": [54]
-		}
-	]
+	"usbIds": []
 }

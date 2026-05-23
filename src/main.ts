@@ -1,13 +1,31 @@
-import type { DiscoveredSurfaceInfo, OpenSurfaceResult, SurfaceContext, SurfacePlugin } from '@companion-surface/base'
-import { MidiWrapper } from './instance.js'
+import type { OpenSurfaceResult, SurfaceContext, SurfacePlugin } from '@companion-surface/base'
+import { OSCWrapper } from './instance.js'
 import { createSurfaceSchema } from './surface-schema.js'
 import { MidiLayoutDefinition, NovationLaunchpadLayoutTest } from './tmp-layout.js'
+import { OSCPluginRemoteService } from './remote.js'
 
 export interface OSCDeviceInfo {
-	port: number
+	protocol: string
+	local_port: number
 }
 
-const MidiPlugin: SurfacePlugin<OSCDeviceInfo> = {
+export interface OSCUDPDeviceInfo {
+	protocol: 'udp'
+	local_port: number
+	remote_port: number
+	remote_address: string
+}
+
+export interface OSCTCPDeviceInfo {
+	protocol: 'tcp'
+	local_port: number
+}
+
+const remoteService = new OSCPluginRemoteService()
+
+const OSCPlugin: SurfacePlugin<OSCDeviceInfo> = {
+	remote: remoteService,
+
 	init: async (): Promise<void> => {
 		// Nothing to do
 	},
@@ -15,29 +33,17 @@ const MidiPlugin: SurfacePlugin<OSCDeviceInfo> = {
 		// Nothing to do
 	},
 
-	scanForSurfaces: async (): Promise<DiscoveredSurfaceInfo<OSCDeviceInfo>[]> => {
-		const discovered: DiscoveredSurfaceInfo<OSCDeviceInfo>[] = []
-
-		discovered.push({
-			surfaceId: `osc:1`,
-			description: `OSC Port 1`,
-			pluginInfo: {
-				port: 8000,
-			},
-		})
-
-		return discovered
-	},
-
 	openSurface: async (
 		surfaceId: string,
-		_pluginInfo: OSCDeviceInfo,
+		pluginInfo: OSCDeviceInfo,
 		context: SurfaceContext,
 	): Promise<OpenSurfaceResult> => {
 		const layout: MidiLayoutDefinition = NovationLaunchpadLayoutTest
 
+		console.log('Opening surface')
+
 		return {
-			surface: new MidiWrapper(surfaceId, context),
+			surface: new OSCWrapper(surfaceId, pluginInfo, context),
 			registerProps: {
 				brightness: true,
 				surfaceLayout: createSurfaceSchema(layout),
@@ -48,4 +54,4 @@ const MidiPlugin: SurfacePlugin<OSCDeviceInfo> = {
 		}
 	},
 }
-export default MidiPlugin
+export default OSCPlugin
