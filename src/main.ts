@@ -23,7 +23,7 @@ export interface OSCTCPDeviceInfo {
 
 const remoteService = new OSCPluginRemoteService()
 
-const OSCPlugin: SurfacePlugin<OSCDeviceInfo> = {
+const OSCPlugin: SurfacePlugin<OSCUDPDeviceInfo> = {
 	remote: remoteService,
 
 	init: async (): Promise<void> => {
@@ -35,7 +35,7 @@ const OSCPlugin: SurfacePlugin<OSCDeviceInfo> = {
 
 	openSurface: async (
 		surfaceId: string,
-		pluginInfo: OSCDeviceInfo,
+		pluginInfo: OSCUDPDeviceInfo,
 		context: SurfaceContext,
 	): Promise<OpenSurfaceResult> => {
 		const layout: MidiLayoutDefinition = NovationLaunchpadLayoutTest

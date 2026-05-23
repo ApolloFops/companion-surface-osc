@@ -8,12 +8,13 @@ import {
 	// createModuleLogger,
 } from '@companion-surface/base'
 
-import { OSCDeviceInfo } from './main.js'
+import { OSCUDPDeviceInfo } from './main.js'
 
 import osc from 'osc'
 
 export class OSCWrapper implements SurfaceInstance {
 	readonly #surfaceId: string
+	readonly #pluginInfo: OSCUDPDeviceInfo
 	// readonly #context: SurfaceContext
 	// readonly #logger: ModuleLogger
 
@@ -27,9 +28,10 @@ export class OSCWrapper implements SurfaceInstance {
 		return 'OSC'
 	}
 
-	public constructor(surfaceId: string, pluginInfo: OSCDeviceInfo, context: SurfaceContext) {
+	public constructor(surfaceId: string, pluginInfo: OSCUDPDeviceInfo, context: SurfaceContext) {
 		// this.#logger = createModuleLogger(`Framework/${surfaceId}`)
 		this.#surfaceId = surfaceId
+		this.#pluginInfo = pluginInfo
 
 		this.#oscPort = new osc.UDPPort({
 			localAddress: '0.0.0.0',
@@ -95,7 +97,23 @@ export class OSCWrapper implements SurfaceInstance {
 		await this.#clearPanel()
 	}
 
-	async draw(_signal: AbortSignal, _drawProps: SurfaceDrawProps): Promise<void> {}
+	async draw(_signal: AbortSignal, drawProps: SurfaceDrawProps): Promise<void> {
+		if (drawProps.color) {
+			this.#oscPort.send(
+				{
+					address: `/location/1/${drawProps.controlId}/color`,
+					args: [
+						{
+							type: 's',
+							value: drawProps.color,
+						},
+					],
+				},
+				this.#pluginInfo.remote_address,
+				this.#pluginInfo.remote_port,
+			)
+		}
+	}
 
 	async #clearPanel(): Promise<void> {}
 

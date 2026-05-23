@@ -8,16 +8,18 @@ import {
 } from '@companion-surface/base'
 import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
-import { OSCDeviceInfo } from './main.js'
+import { OSCUDPDeviceInfo } from './main.js'
 
 export interface OSCConnectionConfig {
 	protocol: string
-	port: number
+	local_port: number
+	remote_port: number
+	remote_address: string
 }
 
 export class OSCPluginRemoteService
-	extends EventEmitter<SurfacePluginRemoteEvents<OSCDeviceInfo>>
-	implements SurfacePluginRemote<OSCDeviceInfo>
+	extends EventEmitter<SurfacePluginRemoteEvents<OSCUDPDeviceInfo>>
+	implements SurfacePluginRemote<OSCUDPDeviceInfo>
 {
 	readonly #logger = createModuleLogger('OSCRemoteService')
 
@@ -42,12 +44,26 @@ export class OSCPluginRemoteService
 			default: 'udp',
 		},
 		{
-			id: 'port',
+			id: 'local_port',
 			type: 'number',
-			label: 'Port',
+			label: 'Local Port',
 			default: 8000,
 			min: 1,
 			max: 65535,
+		},
+		{
+			id: 'remote_port',
+			type: 'number',
+			label: 'Remote Port',
+			default: 8001,
+			min: 1,
+			max: 65535,
+		},
+		{
+			id: 'remote_address',
+			type: 'textinput',
+			label: 'Remote Address',
+			default: '127.0.01',
 		},
 	]
 
@@ -59,16 +75,18 @@ export class OSCPluginRemoteService
 		for (const info of connectionInfos) {
 			const config = info.config as Partial<OSCConnectionConfig>
 
-			this.#logger.info(`Connect requested: ${config.protocol} ${config.port ?? 8000}`)
+			this.#logger.info(`Connect requested: ${config.protocol} ${config.local_port ?? 8000}`)
 
 			this.emit('surfacesConnected', [
 				{
 					deviceHandle: nanoid(),
-					surfaceId: `osc:${config.protocol}-${config.port}`,
+					surfaceId: `osc:${config.protocol}-${config.local_port ?? 8000}`,
 					description: `Generic OSC`,
 					pluginInfo: {
 						protocol: 'udp',
-						local_port: config.port ?? 8000,
+						local_port: config.local_port ?? 8000,
+						remote_port: config.remote_port ?? 8001,
+						remote_address: config.remote_address ?? '127.0.0.1',
 					},
 				},
 			])
