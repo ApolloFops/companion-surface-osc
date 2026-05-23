@@ -4,26 +4,33 @@ import { createSurfaceSchema } from './surface-schema.js'
 import { MidiLayoutDefinition, NovationLaunchpadLayoutTest } from './tmp-layout.js'
 import { OSCPluginRemoteService } from './remote.js'
 
-export interface OSCDeviceInfo {
+export type OSCDeviceInfo = OSCUDPDeviceInfo | OSCTCPServerDeviceInfo | OSCTCPClientDeviceInfo
+
+export interface OSCBaseDeviceInfo {
 	protocol: string
-	local_port: number
 }
 
-export interface OSCUDPDeviceInfo {
+export interface OSCUDPDeviceInfo extends OSCBaseDeviceInfo {
 	protocol: 'udp'
 	local_port: number
 	remote_port: number
 	remote_address: string
 }
 
-export interface OSCTCPDeviceInfo {
-	protocol: 'tcp'
+export interface OSCTCPClientDeviceInfo extends OSCBaseDeviceInfo {
+	protocol: 'tcp-client'
+	remote_port: number
+	remote_address: string
+}
+
+export interface OSCTCPServerDeviceInfo extends OSCBaseDeviceInfo {
+	protocol: 'tcp-server'
 	local_port: number
 }
 
 const remoteService = new OSCPluginRemoteService()
 
-const OSCPlugin: SurfacePlugin<OSCUDPDeviceInfo> = {
+const OSCPlugin: SurfacePlugin<OSCDeviceInfo> = {
 	remote: remoteService,
 
 	init: async (): Promise<void> => {
@@ -35,7 +42,7 @@ const OSCPlugin: SurfacePlugin<OSCUDPDeviceInfo> = {
 
 	openSurface: async (
 		surfaceId: string,
-		pluginInfo: OSCUDPDeviceInfo,
+		pluginInfo: OSCDeviceInfo,
 		context: SurfaceContext,
 	): Promise<OpenSurfaceResult> => {
 		const layout: MidiLayoutDefinition = NovationLaunchpadLayoutTest

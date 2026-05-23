@@ -8,7 +8,7 @@ import {
 } from '@companion-surface/base'
 import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
-import { OSCUDPDeviceInfo } from './main.js'
+import { OSCDeviceInfo } from './main.js'
 
 export interface OSCConnectionConfig {
 	protocol: string
@@ -18,8 +18,8 @@ export interface OSCConnectionConfig {
 }
 
 export class OSCPluginRemoteService
-	extends EventEmitter<SurfacePluginRemoteEvents<OSCUDPDeviceInfo>>
-	implements SurfacePluginRemote<OSCUDPDeviceInfo>
+	extends EventEmitter<SurfacePluginRemoteEvents<OSCDeviceInfo>>
+	implements SurfacePluginRemote<OSCDeviceInfo>
 {
 	readonly #logger = createModuleLogger('OSCRemoteService')
 
@@ -40,7 +40,10 @@ export class OSCPluginRemoteService
 			type: 'dropdown',
 			id: 'protocol',
 			label: 'Protocol',
-			choices: [{ id: 'udp', label: 'UDP (Default)' }],
+			choices: [
+				{ id: 'udp', label: 'UDP (Default)' },
+				{ id: 'tcp-client', label: 'TCP Client' },
+			],
 			default: 'udp',
 		},
 		{
@@ -77,23 +80,44 @@ export class OSCPluginRemoteService
 
 			this.#logger.info(`Connect requested: ${config.protocol} ${config.local_port ?? 8000}`)
 
-			this.emit('surfacesConnected', [
-				{
-					deviceHandle: nanoid(),
-					surfaceId: `osc:${config.protocol}-${config.local_port ?? 8000}`,
-					description: `Generic OSC`,
-					pluginInfo: {
+			let pluginInfo: OSCDeviceInfo | null = null
+
+			switch (config.protocol) {
+				case 'udp':
+					pluginInfo = {
 						protocol: 'udp',
 						local_port: config.local_port ?? 8000,
 						remote_port: config.remote_port ?? 8001,
 						remote_address: config.remote_address ?? '127.0.0.1',
-					},
-				},
-			])
+					}
+					break
 
-			// TODO:
-			// Create/connect OSC client here
-			// Then emit surfacesConnected once ready
+				case 'tcp-client':
+					pluginInfo = {
+						protocol: 'tcp-client',
+						remote_port: config.remote_port ?? 8001,
+						remote_address: config.remote_address ?? '127.0.0.1',
+					}
+					break
+
+				case 'tcp-server':
+					pluginInfo = {
+						protocol: 'tcp-server',
+						local_port: config.local_port ?? 8000,
+					}
+					break
+			}
+
+			if (pluginInfo != null) {
+				this.emit('surfacesConnected', [
+					{
+						deviceHandle: nanoid(),
+						surfaceId: `osc:${config.protocol}-${config.local_port ?? 8000}`,
+						description: `Generic OSC`,
+						pluginInfo: pluginInfo,
+					},
+				])
+			}
 		}
 	}
 
@@ -104,7 +128,7 @@ export class OSCPluginRemoteService
 		// Disconnect OSC clients here
 	}
 
-	rejectSurface(_surfaceInfo: DetectionSurfaceInfo<OSCUDPDeviceInfo>): void {
+	rejectSurface(_surfaceInfo: DetectionSurfaceInfo<OSCDeviceInfo>): void {
 		// Optional:
 		// Handle rejected surfaces if needed
 	}

@@ -8,7 +8,7 @@ import {
 	// createModuleLogger,
 } from '@companion-surface/base'
 
-import { OSCUDPDeviceInfo } from './main.js'
+import { OSCDeviceInfo } from './main.js'
 
 import osc from 'osc'
 
@@ -27,16 +27,32 @@ export class OSCWrapper implements SurfaceInstance {
 		return 'OSC'
 	}
 
-	public constructor(surfaceId: string, pluginInfo: OSCUDPDeviceInfo, context: SurfaceContext) {
+	public constructor(surfaceId: string, pluginInfo: OSCDeviceInfo, context: SurfaceContext) {
 		// this.#logger = createModuleLogger(`Framework/${surfaceId}`)
 		this.#surfaceId = surfaceId
 
-		this.#osc = new osc.UDPPort({
-			localAddress: '0.0.0.0',
-			localPort: pluginInfo.local_port,
-			remoteAddress: pluginInfo.remote_address,
-			remotePort: pluginInfo.remote_port,
-		})
+		if (pluginInfo.protocol === 'udp') {
+			this.#osc = new osc.UDPPort({
+				localAddress: '0.0.0.0',
+				localPort: pluginInfo.local_port,
+				remoteAddress: pluginInfo.remote_address,
+				remotePort: pluginInfo.remote_port,
+			})
+		}
+
+		if (pluginInfo.protocol === 'tcp-client') {
+			this.#osc = new osc.TCPSocketPort({
+				address: pluginInfo.remote_address,
+				port: pluginInfo.remote_port,
+			})
+		}
+
+		if (pluginInfo.protocol === 'tcp-server') {
+			this.#osc = new osc.TCPSocketPort({
+				address: '0.0.0.0',
+				port: pluginInfo.local_port,
+			})
+		}
 
 		// Listen for incoming OSC messages.
 		this.#osc.on('message', (message, _timeTag, _info) => {
