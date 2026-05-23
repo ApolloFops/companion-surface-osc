@@ -10,14 +10,14 @@ import {
 
 import { OSCUDPDeviceInfo } from './main.js'
 
-import OSC from 'osc-js'
+import osc from 'osc'
 
 export class OSCWrapper implements SurfaceInstance {
 	readonly #surfaceId: string
 	// readonly #context: SurfaceContext
 	// readonly #logger: ModuleLogger
 
-	readonly #osc: InstanceType<typeof OSC>
+	readonly #osc: osc.Port
 
 	public get surfaceId(): string {
 		return this.#surfaceId
@@ -31,23 +31,15 @@ export class OSCWrapper implements SurfaceInstance {
 		// this.#logger = createModuleLogger(`Framework/${surfaceId}`)
 		this.#surfaceId = surfaceId
 
-		const options = {
-			open: {
-				host: '0.0.0.0',
-				port: pluginInfo.local_port,
-			},
-			send: {
-				host: pluginInfo.remote_address,
-				port: pluginInfo.remote_port,
-			},
-		}
-
-		this.#osc = new OSC({
-			plugin: new OSC.DatagramPlugin(options),
+		this.#osc = new osc.UDPPort({
+			localAddress: '0.0.0.0',
+			localPort: pluginInfo.local_port,
+			remoteAddress: pluginInfo.remote_address,
+			remotePort: pluginInfo.remote_port,
 		})
 
 		// Listen for incoming OSC messages.
-		this.#osc.on('*', (message) => {
+		this.#osc.on('message', (message, _timeTag, _info) => {
 			console.log('An OSC message just arrived!', message)
 
 			const keyUpDownRegex: RegExp = /\/location\/\d+\/(\d+\/\d+)$/
@@ -80,14 +72,14 @@ export class OSCWrapper implements SurfaceInstance {
 		// Start with blanking it
 		await this.blank()
 
-		// Open the sockets
+		// Open the socket
 		this.#osc.open()
 	}
 
 	async close(): Promise<void> {
 		await this.#clearPanel().catch(() => null)
 
-		// Close the sockets
+		// Close the socket
 		this.#osc.close()
 	}
 
@@ -104,18 +96,30 @@ export class OSCWrapper implements SurfaceInstance {
 	}
 
 	async draw(_signal: AbortSignal, drawProps: SurfaceDrawProps): Promise<void> {
-		const messages: InstanceType<typeof OSC.Message>[] = []
-
+		// Maybe a bundle could be faster here but from my testing it's not
 		if (drawProps.text) {
-			messages.push(new OSC.Message(`/location/1/${drawProps.controlId}/text`, drawProps.text))
+			this.#osc.send({
+				address: `/location/1/${drawProps.controlId}/text`,
+				args: [
+					{
+						type: 's',
+						value: drawProps.text,
+					},
+				],
+			})
 		}
 
 		if (drawProps.color) {
-			messages.push(new OSC.Message(`/location/1/${drawProps.controlId}/color`, drawProps.color))
+			this.#osc.send({
+				address: `/location/1/${drawProps.controlId}/color`,
+				args: [
+					{
+						type: 's',
+						value: drawProps.color,
+					},
+				],
+			})
 		}
-
-		const messageBundle = new OSC.Bundle(messages)
-		this.#osc.send(messageBundle)
 	}
 
 	async #clearPanel(): Promise<void> {}
