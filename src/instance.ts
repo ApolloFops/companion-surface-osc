@@ -98,6 +98,22 @@ export class OSCWrapper implements SurfaceInstance {
 	}
 
 	async draw(_signal: AbortSignal, drawProps: SurfaceDrawProps): Promise<void> {
+		if (drawProps.text) {
+			this.#oscPort.send(
+				{
+					address: `/location/1/${drawProps.controlId}/text`,
+					args: [
+						{
+							type: 's',
+							value: drawProps.text,
+						},
+					],
+				},
+				this.#pluginInfo.remote_address,
+				this.#pluginInfo.remote_port,
+			)
+		}
+
 		if (drawProps.color) {
 			this.#oscPort.send(
 				{

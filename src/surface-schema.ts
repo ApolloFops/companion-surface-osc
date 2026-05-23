@@ -5,6 +5,7 @@ export function createSurfaceSchema(layout: MidiLayoutDefinition): SurfaceSchema
 	const surfaceLayout: SurfaceSchemaLayoutDefinition = {
 		stylePresets: {
 			default: {
+				text: true,
 				colors: 'hex',
 			},
 		},
