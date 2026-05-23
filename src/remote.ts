@@ -104,7 +104,7 @@ export class OSCPluginRemoteService
 		// Disconnect OSC clients here
 	}
 
-	rejectSurface(_surfaceInfo: DetectionSurfaceInfo<OSCDeviceInfo>): void {
+	rejectSurface(_surfaceInfo: DetectionSurfaceInfo<OSCUDPDeviceInfo>): void {
 		// Optional:
 		// Handle rejected surfaces if needed
 	}

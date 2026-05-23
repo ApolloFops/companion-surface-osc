@@ -10,15 +10,14 @@ import {
 
 import { OSCUDPDeviceInfo } from './main.js'
 
-import osc from 'osc'
+import OSC from 'osc-js'
 
 export class OSCWrapper implements SurfaceInstance {
 	readonly #surfaceId: string
-	readonly #pluginInfo: OSCUDPDeviceInfo
 	// readonly #context: SurfaceContext
 	// readonly #logger: ModuleLogger
 
-	readonly #oscPort: osc.UDPPort
+	readonly #osc: InstanceType<typeof OSC>
 
 	public get surfaceId(): string {
 		return this.#surfaceId
@@ -31,26 +30,33 @@ export class OSCWrapper implements SurfaceInstance {
 	public constructor(surfaceId: string, pluginInfo: OSCUDPDeviceInfo, context: SurfaceContext) {
 		// this.#logger = createModuleLogger(`Framework/${surfaceId}`)
 		this.#surfaceId = surfaceId
-		this.#pluginInfo = pluginInfo
 
-		this.#oscPort = new osc.UDPPort({
-			localAddress: '0.0.0.0',
-			localPort: pluginInfo.local_port,
-			metadata: true,
+		const options = {
+			open: {
+				host: '0.0.0.0',
+				port: pluginInfo.local_port,
+			},
+			send: {
+				host: pluginInfo.remote_address,
+				port: pluginInfo.remote_port,
+			},
+		}
+
+		this.#osc = new OSC({
+			plugin: new OSC.DatagramPlugin(options),
 		})
 
 		// Listen for incoming OSC messages.
-		this.#oscPort.on('message', function (oscMsg, timeTag, info) {
-			console.log('An OSC message just arrived!', oscMsg)
-			console.log('Remote info is: ', info)
+		this.#osc.on('*', (message) => {
+			console.log('An OSC message just arrived!', message)
 
 			const keyUpDownRegex: RegExp = /\/location\/\d+\/(\d+\/\d+)$/
-			if (keyUpDownRegex.test(oscMsg['address'])) {
-				const path = oscMsg['address'].match(keyUpDownRegex)
+			if (keyUpDownRegex.test(message['address'])) {
+				const path = message['address'].match(keyUpDownRegex)
 
 				const keyId = path[1]
 
-				if (oscMsg['args'][0].value) {
+				if (message['args'][0]) {
 					context.keyDownById(keyId)
 				} else {
 					context.keyUpById(keyId)
@@ -60,8 +66,8 @@ export class OSCWrapper implements SurfaceInstance {
 			}
 
 			const keyPressRegex: RegExp = /\/location\/\d+\/(\d+\/\d+)\/press$/
-			if (keyPressRegex.test(oscMsg['address'])) {
-				const path = oscMsg['address'].match(keyPressRegex)
+			if (keyPressRegex.test(message['address'])) {
+				const path = message['address'].match(keyPressRegex)
 
 				context.keyDownUpById(path[1])
 
@@ -74,15 +80,15 @@ export class OSCWrapper implements SurfaceInstance {
 		// Start with blanking it
 		await this.blank()
 
-		// Open the socket
-		this.#oscPort.open()
+		// Open the sockets
+		this.#osc.open()
 	}
 
 	async close(): Promise<void> {
 		await this.#clearPanel().catch(() => null)
 
-		// Close the socket
-		this.#oscPort.close()
+		// Close the sockets
+		this.#osc.close()
 	}
 
 	updateCapabilities(_capabilities: HostCapabilities): void {
@@ -98,37 +104,18 @@ export class OSCWrapper implements SurfaceInstance {
 	}
 
 	async draw(_signal: AbortSignal, drawProps: SurfaceDrawProps): Promise<void> {
+		const messages: InstanceType<typeof OSC.Message>[] = []
+
 		if (drawProps.text) {
-			this.#oscPort.send(
-				{
-					address: `/location/1/${drawProps.controlId}/text`,
-					args: [
-						{
-							type: 's',
-							value: drawProps.text,
-						},
-					],
-				},
-				this.#pluginInfo.remote_address,
-				this.#pluginInfo.remote_port,
-			)
+			messages.push(new OSC.Message(`/location/1/${drawProps.controlId}/text`, drawProps.text))
 		}
 
 		if (drawProps.color) {
-			this.#oscPort.send(
-				{
-					address: `/location/1/${drawProps.controlId}/color`,
-					args: [
-						{
-							type: 's',
-							value: drawProps.color,
-						},
-					],
-				},
-				this.#pluginInfo.remote_address,
-				this.#pluginInfo.remote_port,
-			)
+			messages.push(new OSC.Message(`/location/1/${drawProps.controlId}/color`, drawProps.color))
 		}
+
+		const messageBundle = new OSC.Bundle(messages)
+		this.#osc.send(messageBundle)
 	}
 
 	async #clearPanel(): Promise<void> {}
