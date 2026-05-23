@@ -1,3 +1,3 @@
-## Generic MIDI
+## Generic OSC
 
 TODO

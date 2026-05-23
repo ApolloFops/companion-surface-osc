@@ -1,14 +1,13 @@
 import type { DiscoveredSurfaceInfo, OpenSurfaceResult, SurfaceContext, SurfacePlugin } from '@companion-surface/base'
 import { MidiWrapper } from './instance.js'
 import { createSurfaceSchema } from './surface-schema.js'
-import { Input, Output } from '@julusian/midi'
 import { MidiLayoutDefinition, NovationLaunchpadLayoutTest } from './tmp-layout.js'
 
-export interface MidiDeviceInfo {
-	inputPortName: string
+export interface OSCDeviceInfo {
+	port: number
 }
 
-const MidiPlugin: SurfacePlugin<MidiDeviceInfo> = {
+const MidiPlugin: SurfacePlugin<OSCDeviceInfo> = {
 	init: async (): Promise<void> => {
 		// Nothing to do
 	},
@@ -16,20 +15,15 @@ const MidiPlugin: SurfacePlugin<MidiDeviceInfo> = {
 		// Nothing to do
 	},
 
-	scanForSurfaces: async (): Promise<DiscoveredSurfaceInfo<MidiDeviceInfo>[]> => {
-		const discovered: DiscoveredSurfaceInfo<MidiDeviceInfo>[] = []
+	scanForSurfaces: async (): Promise<DiscoveredSurfaceInfo<OSCDeviceInfo>[]> => {
+		const discovered: DiscoveredSurfaceInfo<OSCDeviceInfo>[] = []
 
-		Input.getPortNames().forEach((name, i) => {
-			// Future: maybe filter names here to only show certain devices
-			console.log(`MIDI Input Port ${i}: ${name}`)
-
-			discovered.push({
-				surfaceId: `midi:${i}`,
-				description: `MIDI Port ${i}: ${name}`,
-				pluginInfo: {
-					inputPortName: name,
-				},
-			})
+		discovered.push({
+			surfaceId: `osc:1`,
+			description: `OSC Port 1`,
+			pluginInfo: {
+				port: 8000,
+			},
 		})
 
 		return discovered
@@ -37,34 +31,20 @@ const MidiPlugin: SurfacePlugin<MidiDeviceInfo> = {
 
 	openSurface: async (
 		surfaceId: string,
-		pluginInfo: MidiDeviceInfo,
+		_pluginInfo: OSCDeviceInfo,
 		context: SurfaceContext,
 	): Promise<OpenSurfaceResult> => {
 		const layout: MidiLayoutDefinition = NovationLaunchpadLayoutTest
 
-		const input = new Input()
-		let output: Output | undefined
-
-		try {
-			input.openPortByName(pluginInfo.inputPortName)
-			output = new Output()
-			output.openPortByName(pluginInfo.inputPortName) // TODO - check if this is good?
-
-			return {
-				surface: new MidiWrapper(surfaceId, input, output, pluginInfo.inputPortName, context, layout),
-				registerProps: {
-					brightness: true,
-					surfaceLayout: createSurfaceSchema(layout),
-					pincodeMap: null,
-					configFields: null,
-					location: null,
-				},
-			}
-		} catch (e) {
-			input.closePort()
-			output?.closePort()
-
-			throw e
+		return {
+			surface: new MidiWrapper(surfaceId, context),
+			registerProps: {
+				brightness: true,
+				surfaceLayout: createSurfaceSchema(layout),
+				pincodeMap: null,
+				configFields: null,
+				location: null,
+			},
 		}
 	},
 }
