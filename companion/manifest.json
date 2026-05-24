@@ -13,7 +13,10 @@
 	"runtime": {
 		"type": "node22",
 		"apiVersion": "0.0.0",
-		"entrypoint": "../dist/main.js"
+		"entrypoint": "../dist/main.js",
+		"permissions": {
+			"native-addons": true
+		}
 	},
 	"keywords": ["osc"],
 	"products": ["OSC"],
