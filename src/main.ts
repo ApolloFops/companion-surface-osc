@@ -49,7 +49,7 @@ const OSCPlugin: SurfacePlugin<OSCDeviceInfo> = {
 		return {
 			surface: new OSCWrapper(surfaceId, pluginInfo, context),
 			registerProps: {
-				brightness: true,
+				brightness: false,
 				surfaceLayout: createSurfaceSchema(pluginInfo.rows, pluginInfo.cols),
 				pincodeMap: null,
 				configFields: null,
