@@ -12,9 +12,11 @@ import osc from 'osc'
 import util from 'util'
 
 import { OSCDeviceInfo } from './main.js'
+import { createControlId } from './util.js'
 
 export class OSCWrapper implements SurfaceInstance {
 	readonly #surfaceId: string
+	readonly #pluginInfo: OSCDeviceInfo
 	readonly #context: SurfaceContext
 	readonly #logger: ModuleLogger
 
@@ -30,6 +32,7 @@ export class OSCWrapper implements SurfaceInstance {
 
 	public constructor(surfaceId: string, pluginInfo: OSCDeviceInfo, context: SurfaceContext) {
 		this.#logger = createModuleLogger(`Framework/${surfaceId}`)
+		this.#pluginInfo = pluginInfo
 		this.#surfaceId = surfaceId
 		this.#context = context
 
@@ -90,25 +93,57 @@ export class OSCWrapper implements SurfaceInstance {
 	}
 
 	async init(): Promise<void> {
-		// Start with blanking it
-		await this.blank()
-
 		// Open the socket
 		this.#osc.open()
+
+		// Start with blanking it
+		await this.blank()
 	}
 
 	async close(): Promise<void> {
+		// Blank it before we go
+		await this.blank().catch(() => null)
+
 		// Close the socket
 		this.#osc.close()
 	}
 
 	updateCapabilities(_capabilities: HostCapabilities): void {}
 
+	async updateConfig(_config: Record<string, any>): Promise<void> {}
+
 	async ready(): Promise<void> {}
 
 	async setBrightness(_percent: number): Promise<void> {}
 
-	async blank(): Promise<void> {}
+	async blank(): Promise<void> {
+		// Send messages that clear all the relevant things
+		for (let row: number = 0; row < this.#pluginInfo.rows; row++) {
+			for (let col: number = 0; col < this.#pluginInfo.cols; col++) {
+				const controlId = createControlId(row, col)
+
+				this.#osc.send({
+					address: `/location/${controlId}/text`,
+					args: [
+						{
+							type: 's',
+							value: '',
+						},
+					],
+				})
+
+				this.#osc.send({
+					address: `/location/${controlId}/color`,
+					args: [
+						{
+							type: 's',
+							value: '#000000',
+						},
+					],
+				})
+			}
+		}
+	}
 
 	async draw(_signal: AbortSignal, drawProps: SurfaceDrawProps): Promise<void> {
 		// Maybe a bundle could be faster here but from my testing it's not
