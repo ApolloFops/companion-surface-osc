@@ -41,6 +41,12 @@ export class OSCWrapper implements SurfaceInstance {
 
 		this.#osc.on('error', (error: any) => this.#context.disconnect(error))
 
+		if (this.#pluginInfo.remote_events) {
+			this.#pluginInfo.remote_events.on('disconnect', () => {
+				this.#context.disconnect(new Error('Asked to close by the remote service'))
+			})
+		}
+
 		// Listen for incoming OSC messages.
 		this.#osc.on('message', (message: any, _timeTag: any, _info: any) => {
 			this.#logger.debug(`An OSC message just arrived! ${util.format(message)}`)

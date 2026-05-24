@@ -30,6 +30,8 @@ export class OSCPluginRemoteService
 {
 	readonly #logger = createModuleLogger('OSCRemoteService')
 
+	readonly #eventEmitters = new Map<string, EventEmitter>()
+
 	constructor() {
 		super()
 	}
@@ -160,6 +162,11 @@ export class OSCPluginRemoteService
 					break
 			}
 
+			// Create an event emitter and add it to the list
+			// This is used to signal if, for example, the connection has to close
+			const eventEmitter = new EventEmitter()
+			this.#eventEmitters.set(info.connectionId, eventEmitter)
+
 			const pluginInfo: OSCDeviceInfo = {
 				rows: config.rows ?? 4,
 				cols: config.cols ?? 8,
@@ -169,6 +176,8 @@ export class OSCPluginRemoteService
 				bitmap_enable: config.bitmap_enable ?? false,
 				bitmap_width: config.bitmap_width ?? 128,
 				bitmap_height: config.bitmap_height ?? 128,
+
+				remote_events: eventEmitter,
 			}
 
 			this.emit('surfacesConnected', [
@@ -185,8 +194,17 @@ export class OSCPluginRemoteService
 	async stopConnections(connectionIds: string[]): Promise<void> {
 		this.#logger.info(`Stopping connections: ${connectionIds.join(', ')}`)
 
-		// TODO:
-		// Disconnect OSC clients here
+		for (const connectionId of connectionIds) {
+			const eventEmitter = this.#eventEmitters.get(connectionId)
+
+			if (eventEmitter) {
+				eventEmitter.emit('disconnect')
+
+				this.#eventEmitters.delete(connectionId)
+			} else {
+				this.#logger.warn(`Connection ${connectionId} not found!`)
+			}
+		}
 	}
 
 	rejectSurface(_surfaceInfo: DetectionSurfaceInfo<OSCDeviceInfo>): void {

@@ -3,6 +3,7 @@ import { OSCWrapper } from './instance.js'
 import { createSurfaceSchema } from './surface-schema.js'
 import { OSCPluginRemoteService } from './remote.js'
 import osc from 'osc'
+import EventEmitter from 'node:events'
 
 export interface OSCDeviceInfo {
 	rows: number
@@ -13,6 +14,8 @@ export interface OSCDeviceInfo {
 	bitmap_enable: boolean
 	bitmap_width: number
 	bitmap_height: number
+
+	remote_events?: EventEmitter
 }
 
 const remoteService = new OSCPluginRemoteService()
