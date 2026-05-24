@@ -9,6 +9,7 @@ import {
 import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import { OSCDeviceInfo } from './main.js'
+import { Regex } from './input-regex.js'
 
 export interface OSCConnectionConfig {
 	rows: number
@@ -68,6 +69,7 @@ export class OSCPluginRemoteService
 			id: 'local_port',
 			type: 'number',
 			label: 'Local Port',
+			tooltip: 'The port on this machine that other clients will send messages to.',
 			default: 8000,
 			min: 1,
 			max: 65535,
@@ -76,6 +78,7 @@ export class OSCPluginRemoteService
 			id: 'remote_port',
 			type: 'number',
 			label: 'Remote Port',
+			tooltip: 'The port on the remote machine to send messages to.',
 			default: 8001,
 			min: 1,
 			max: 65535,
@@ -84,11 +87,13 @@ export class OSCPluginRemoteService
 			id: 'remote_address',
 			type: 'textinput',
 			label: 'Remote Address',
+			tooltip: 'The address of the remote machine to send messages to.',
 			default: '127.0.01',
+			regex: Regex.HOSTNAME,
 		},
 	]
 
-	readonly checkConfigMatchesExpression: string | null = '$(objA:port) == $(objB:port)'
+	readonly checkConfigMatchesExpression: string | null = null
 
 	async startConnections(connectionInfos: RemoteSurfaceConnectionInfo[]): Promise<void> {
 		this.#logger.info(`Starting connections: ${connectionInfos.map((c) => c.connectionId).join(', ')}`)
