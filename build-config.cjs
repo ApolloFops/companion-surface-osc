@@ -1,5 +1,3 @@
 module.exports = {
-	prebuilds: [
-		'@julusian/image-rs',
-	],
+	prebuilds: ['@julusian/image-rs'],
 }
