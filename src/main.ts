@@ -2,35 +2,17 @@ import type { OpenSurfaceResult, SurfaceContext, SurfacePlugin } from '@companio
 import { OSCWrapper } from './instance.js'
 import { createSurfaceSchema } from './surface-schema.js'
 import { OSCPluginRemoteService } from './remote.js'
+import osc from 'osc'
 
-export type OSCDeviceInfo = OSCUDPDeviceInfo | OSCTCPServerDeviceInfo | OSCTCPClientDeviceInfo
-
-export interface OSCBaseDeviceInfo {
-	protocol: string
+export interface OSCDeviceInfo {
 	rows: number
 	cols: number
+
+	osc_port: osc.Port
 
 	bitmap_enable: boolean
 	bitmap_width: number
 	bitmap_height: number
-}
-
-export interface OSCUDPDeviceInfo extends OSCBaseDeviceInfo {
-	protocol: 'udp'
-	local_port: number
-	remote_port: number
-	remote_address: string
-}
-
-export interface OSCTCPClientDeviceInfo extends OSCBaseDeviceInfo {
-	protocol: 'tcp-client'
-	remote_port: number
-	remote_address: string
-}
-
-export interface OSCTCPServerDeviceInfo extends OSCBaseDeviceInfo {
-	protocol: 'tcp-server'
-	local_port: number
 }
 
 const remoteService = new OSCPluginRemoteService()

@@ -37,32 +37,7 @@ export class OSCWrapper implements SurfaceInstance {
 		this.#surfaceId = surfaceId
 		this.#context = context
 
-		switch (pluginInfo.protocol) {
-			default:
-			case 'udp':
-				this.#osc = new osc.UDPPort({
-					localAddress: '0.0.0.0',
-					localPort: pluginInfo.local_port,
-					remoteAddress: pluginInfo.remote_address,
-					remotePort: pluginInfo.remote_port,
-				})
-				break
-
-			case 'tcp-client':
-				this.#osc = new osc.TCPSocketPort({
-					address: pluginInfo.remote_address,
-					port: pluginInfo.remote_port,
-				})
-				break
-
-			case 'tcp-server':
-				// TODO: Do this properly so it works
-				this.#osc = new osc.TCPSocketPort({
-					address: '0.0.0.0',
-					port: pluginInfo.local_port,
-				})
-				break
-		}
+		this.#osc = pluginInfo.osc_port
 
 		this.#osc.on('error', (error: any) => this.#context.disconnect(error))
 

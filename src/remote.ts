@@ -10,6 +10,7 @@ import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import { OSCDeviceInfo } from './main.js'
 import { Regex } from './input-regex.js'
+import osc from 'osc'
 
 export interface OSCConnectionConfig {
 	rows: number
@@ -131,52 +132,44 @@ export class OSCPluginRemoteService
 			this.#logger.info(`Connect requested: ${config.protocol} ${config.local_port ?? 8000}`)
 
 			let pluginInfo: OSCDeviceInfo | null = null
+			let oscPort: osc.Port
 
 			switch (config.protocol) {
+				default:
 				case 'udp':
-					pluginInfo = {
-						rows: config.rows ?? 4,
-						cols: config.cols ?? 8,
-						protocol: 'udp',
-
-						bitmap_enable: config.bitmap_enable ?? false,
-						bitmap_width: config.bitmap_width ?? 128,
-						bitmap_height: config.bitmap_height ?? 128,
-
-						local_port: config.local_port ?? 8000,
-						remote_port: config.remote_port ?? 8001,
-						remote_address: config.remote_address ?? '127.0.0.1',
-					}
+					oscPort = new osc.UDPPort({
+						localAddress: '0.0.0.0',
+						localPort: config.local_port ?? 8000,
+						remoteAddress: config.remote_address ?? '127.0.0.1',
+						remotePort: config.remote_port ?? 8001,
+					})
 					break
 
 				case 'tcp-client':
-					pluginInfo = {
-						rows: config.rows ?? 4,
-						cols: config.cols ?? 8,
-						protocol: 'tcp-client',
-
-						bitmap_enable: config.bitmap_enable ?? false,
-						bitmap_width: config.bitmap_width ?? 128,
-						bitmap_height: config.bitmap_height ?? 128,
-
-						remote_port: config.remote_port ?? 8001,
-						remote_address: config.remote_address ?? '127.0.0.1',
-					}
+					oscPort = new osc.TCPSocketPort({
+						address: config.remote_address ?? '127.0.0.1',
+						port: config.remote_port ?? 8001,
+					})
 					break
 
 				case 'tcp-server':
-					pluginInfo = {
-						rows: config.rows ?? 4,
-						cols: config.cols ?? 8,
-						protocol: 'tcp-server',
-
-						bitmap_enable: config.bitmap_enable ?? false,
-						bitmap_width: config.bitmap_width ?? 128,
-						bitmap_height: config.bitmap_height ?? 128,
-
-						local_port: config.local_port ?? 8000,
-					}
+					// TODO: Do this properly so it works
+					oscPort = new osc.TCPSocketPort({
+						address: '0.0.0.0',
+						port: config.local_port ?? 8000,
+					})
 					break
+			}
+
+			pluginInfo = {
+				rows: config.rows ?? 4,
+				cols: config.cols ?? 8,
+
+				osc_port: oscPort,
+
+				bitmap_enable: config.bitmap_enable ?? false,
+				bitmap_width: config.bitmap_width ?? 128,
+				bitmap_height: config.bitmap_height ?? 128,
 			}
 
 			if (pluginInfo != null) {
