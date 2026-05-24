@@ -155,7 +155,9 @@ export class OSCWrapper implements SurfaceInstance {
 			args: [
 				{
 					type: 's',
-					value: drawProps.text,
+					value: (drawProps.text ?? '')
+						// Need to replace \n with a real newline because bitfocus outputs \n rather than converting to newlines
+						.replace(/\\n/g, '\n'),
 				},
 			],
 		})
