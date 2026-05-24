@@ -63,7 +63,7 @@ export class OSCWrapper implements SurfaceInstance {
 		this.#osc.on('message', (message: any, _timeTag: any, _info: any) => {
 			this.#logger.debug(`An OSC message just arrived! ${util.format(message)}`)
 
-			const keyUpDownRegex: RegExp = /\/location\/\d+\/(\d+\/\d+)$/
+			const keyUpDownRegex: RegExp = /\/location\/(\d+\/\d+)$/
 			if (keyUpDownRegex.test(message['address'])) {
 				const path = message['address'].match(keyUpDownRegex)
 
@@ -78,7 +78,7 @@ export class OSCWrapper implements SurfaceInstance {
 				return
 			}
 
-			const keyPressRegex: RegExp = /\/location\/\d+\/(\d+\/\d+)\/press$/
+			const keyPressRegex: RegExp = /\/location\/(\d+\/\d+)\/press$/
 			if (keyPressRegex.test(message['address'])) {
 				const path = message['address'].match(keyPressRegex)
 
@@ -114,7 +114,7 @@ export class OSCWrapper implements SurfaceInstance {
 		// Maybe a bundle could be faster here but from my testing it's not
 		if (drawProps.text) {
 			this.#osc.send({
-				address: `/location/1/${drawProps.controlId}/text`,
+				address: `/location/${drawProps.controlId}/text`,
 				args: [
 					{
 						type: 's',
@@ -126,7 +126,7 @@ export class OSCWrapper implements SurfaceInstance {
 
 		if (drawProps.color) {
 			this.#osc.send({
-				address: `/location/1/${drawProps.controlId}/color`,
+				address: `/location/${drawProps.controlId}/color`,
 				args: [
 					{
 						type: 's',
