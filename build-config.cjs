@@ -1,6 +1,5 @@
 module.exports = {
-	forceRemoveNodeGypFromPkg: true,
-	externals: {
-		sharp: 'commonjs sharp',
-	},
+	prebuilds: [
+		'@julusian/image-rs',
+	],
 }
