@@ -60,7 +60,7 @@ export class OSCWrapper implements SurfaceInstance {
 		this.#osc.on('error', (error: any) => this.#context.disconnect(error))
 
 		// Listen for incoming OSC messages.
-		this.#osc.on('message', (message, _timeTag, _info) => {
+		this.#osc.on('message', (message: any, _timeTag: any, _info: any) => {
 			this.#logger.debug(`An OSC message just arrived! ${util.format(message)}`)
 
 			const keyUpDownRegex: RegExp = /\/location\/\d+\/(\d+\/\d+)$/
