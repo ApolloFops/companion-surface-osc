@@ -147,17 +147,15 @@ export class OSCWrapper implements SurfaceInstance {
 
 	async draw(_signal: AbortSignal, drawProps: SurfaceDrawProps): Promise<void> {
 		// Maybe a bundle could be faster here but from my testing it's not
-		if (drawProps.text) {
-			this.#osc.send({
-				address: `/location/${drawProps.controlId}/text`,
-				args: [
-					{
-						type: 's',
-						value: drawProps.text,
-					},
-				],
-			})
-		}
+		this.#osc.send({
+			address: `/location/${drawProps.controlId}/text`,
+			args: [
+				{
+					type: 's',
+					value: drawProps.text,
+				},
+			],
+		})
 
 		if (drawProps.color) {
 			this.#osc.send({
