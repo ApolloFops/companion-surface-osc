@@ -1,7 +1,7 @@
 import type { SurfaceSchemaLayoutDefinition } from '@companion-surface/base'
-import { MidiLayoutDefinition } from './tmp-layout.js'
+import { createControlId } from './util.js'
 
-export function createSurfaceSchema(layout: MidiLayoutDefinition): SurfaceSchemaLayoutDefinition {
+export function createSurfaceSchema(rows: number, cols: number): SurfaceSchemaLayoutDefinition {
 	const surfaceLayout: SurfaceSchemaLayoutDefinition = {
 		stylePresets: {
 			default: {
@@ -12,11 +12,13 @@ export function createSurfaceSchema(layout: MidiLayoutDefinition): SurfaceSchema
 		controls: {},
 	}
 
-	for (const button of layout.buttons) {
-		surfaceLayout.controls[button.id] = {
-			row: button.row,
-			column: button.column,
-			// TODO - style?
+	for (let row: number = 0; row < rows; row++) {
+		for (let col: number = 0; col < cols; col++) {
+			surfaceLayout.controls[createControlId(row, col)] = {
+				row: row,
+				column: col,
+				// TODO - style?
+			}
 		}
 	}
 

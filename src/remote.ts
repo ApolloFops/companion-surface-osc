@@ -11,6 +11,8 @@ import { nanoid } from 'nanoid'
 import { OSCDeviceInfo } from './main.js'
 
 export interface OSCConnectionConfig {
+	rows: number
+	cols: number
 	protocol: string
 	local_port: number
 	remote_port: number
@@ -36,6 +38,22 @@ export class OSCPluginRemoteService
 	}
 
 	readonly configFields: SomeCompanionInputField[] = [
+		{
+			id: 'rows',
+			type: 'number',
+			label: 'Rows',
+			default: 4,
+			min: 1,
+			max: 1000,
+		},
+		{
+			id: 'cols',
+			type: 'number',
+			label: 'Columns',
+			default: 8,
+			min: 1,
+			max: 1000,
+		},
 		{
 			type: 'dropdown',
 			id: 'protocol',
@@ -85,6 +103,8 @@ export class OSCPluginRemoteService
 			switch (config.protocol) {
 				case 'udp':
 					pluginInfo = {
+						rows: config.rows ?? 4,
+						cols: config.cols ?? 8,
 						protocol: 'udp',
 						local_port: config.local_port ?? 8000,
 						remote_port: config.remote_port ?? 8001,
@@ -94,6 +114,8 @@ export class OSCPluginRemoteService
 
 				case 'tcp-client':
 					pluginInfo = {
+						rows: config.rows ?? 4,
+						cols: config.cols ?? 8,
 						protocol: 'tcp-client',
 						remote_port: config.remote_port ?? 8001,
 						remote_address: config.remote_address ?? '127.0.0.1',
@@ -102,6 +124,8 @@ export class OSCPluginRemoteService
 
 				case 'tcp-server':
 					pluginInfo = {
+						rows: config.rows ?? 4,
+						cols: config.cols ?? 8,
 						protocol: 'tcp-server',
 						local_port: config.local_port ?? 8000,
 					}

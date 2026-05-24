@@ -1,6 +1,7 @@
 export function createControlId(row: number, column: number): string {
 	return `${row}/${column}`
 }
+
 export function parseControlId(controlId: string): { row: number; column: number } {
 	const [rowStr, columnStr] = controlId.split('/')
 	return {

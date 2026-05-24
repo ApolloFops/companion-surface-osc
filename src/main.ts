@@ -1,13 +1,14 @@
 import type { OpenSurfaceResult, SurfaceContext, SurfacePlugin } from '@companion-surface/base'
 import { OSCWrapper } from './instance.js'
 import { createSurfaceSchema } from './surface-schema.js'
-import { MidiLayoutDefinition, NovationLaunchpadLayoutTest } from './tmp-layout.js'
 import { OSCPluginRemoteService } from './remote.js'
 
 export type OSCDeviceInfo = OSCUDPDeviceInfo | OSCTCPServerDeviceInfo | OSCTCPClientDeviceInfo
 
 export interface OSCBaseDeviceInfo {
 	protocol: string
+	rows: number
+	cols: number
 }
 
 export interface OSCUDPDeviceInfo extends OSCBaseDeviceInfo {
@@ -45,13 +46,11 @@ const OSCPlugin: SurfacePlugin<OSCDeviceInfo> = {
 		pluginInfo: OSCDeviceInfo,
 		context: SurfaceContext,
 	): Promise<OpenSurfaceResult> => {
-		const layout: MidiLayoutDefinition = NovationLaunchpadLayoutTest
-
 		return {
 			surface: new OSCWrapper(surfaceId, pluginInfo, context),
 			registerProps: {
 				brightness: true,
-				surfaceLayout: createSurfaceSchema(layout),
+				surfaceLayout: createSurfaceSchema(pluginInfo.rows, pluginInfo.cols),
 				pincodeMap: null,
 				configFields: null,
 				location: null,
