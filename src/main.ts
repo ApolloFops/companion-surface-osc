@@ -47,8 +47,6 @@ const OSCPlugin: SurfacePlugin<OSCDeviceInfo> = {
 	): Promise<OpenSurfaceResult> => {
 		const layout: MidiLayoutDefinition = NovationLaunchpadLayoutTest
 
-		console.log('Opening surface')
-
 		return {
 			surface: new OSCWrapper(surfaceId, pluginInfo, context),
 			registerProps: {

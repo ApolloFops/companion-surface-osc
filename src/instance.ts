@@ -4,18 +4,19 @@ import {
 	SurfaceDrawProps,
 	SurfaceContext,
 	SurfaceInstance,
-	// ModuleLogger,
-	// createModuleLogger,
+	ModuleLogger,
+	createModuleLogger,
 } from '@companion-surface/base'
+
+import osc from 'osc'
+import util from 'util'
 
 import { OSCDeviceInfo } from './main.js'
 
-import osc from 'osc'
-
 export class OSCWrapper implements SurfaceInstance {
 	readonly #surfaceId: string
-	// readonly #context: SurfaceContext
-	// readonly #logger: ModuleLogger
+	readonly #context: SurfaceContext
+	readonly #logger: ModuleLogger
 
 	readonly #osc: osc.Port
 
@@ -28,8 +29,9 @@ export class OSCWrapper implements SurfaceInstance {
 	}
 
 	public constructor(surfaceId: string, pluginInfo: OSCDeviceInfo, context: SurfaceContext) {
-		// this.#logger = createModuleLogger(`Framework/${surfaceId}`)
+		this.#logger = createModuleLogger(`Framework/${surfaceId}`)
 		this.#surfaceId = surfaceId
+		this.#context = context
 
 		if (pluginInfo.protocol === 'udp') {
 			this.#osc = new osc.UDPPort({
@@ -48,15 +50,18 @@ export class OSCWrapper implements SurfaceInstance {
 		}
 
 		if (pluginInfo.protocol === 'tcp-server') {
+			// TODO: Do this properly so it works
 			this.#osc = new osc.TCPSocketPort({
 				address: '0.0.0.0',
 				port: pluginInfo.local_port,
 			})
 		}
 
+		this.#osc.on('error', (error: any) => this.#context.disconnect(error))
+
 		// Listen for incoming OSC messages.
 		this.#osc.on('message', (message, _timeTag, _info) => {
-			console.log('An OSC message just arrived!', message)
+			this.#logger.debug(`An OSC message just arrived! ${util.format(message)}`)
 
 			const keyUpDownRegex: RegExp = /\/location\/\d+\/(\d+\/\d+)$/
 			if (keyUpDownRegex.test(message['address'])) {
@@ -93,23 +98,17 @@ export class OSCWrapper implements SurfaceInstance {
 	}
 
 	async close(): Promise<void> {
-		await this.#clearPanel().catch(() => null)
-
 		// Close the socket
 		this.#osc.close()
 	}
 
-	updateCapabilities(_capabilities: HostCapabilities): void {
-		// Not used
-	}
+	updateCapabilities(_capabilities: HostCapabilities): void {}
 
 	async ready(): Promise<void> {}
 
 	async setBrightness(_percent: number): Promise<void> {}
 
-	async blank(): Promise<void> {
-		await this.#clearPanel()
-	}
+	async blank(): Promise<void> {}
 
 	async draw(_signal: AbortSignal, drawProps: SurfaceDrawProps): Promise<void> {
 		// Maybe a bundle could be faster here but from my testing it's not
@@ -137,8 +136,6 @@ export class OSCWrapper implements SurfaceInstance {
 			})
 		}
 	}
-
-	async #clearPanel(): Promise<void> {}
 
 	async showStatus(_signal: AbortSignal, _cardGenerator: CardGenerator): Promise<void> {
 		// Nothing to display here
