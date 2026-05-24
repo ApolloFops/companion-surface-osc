@@ -131,7 +131,6 @@ export class OSCPluginRemoteService
 
 			this.#logger.info(`Connect requested: ${config.protocol} ${config.local_port ?? 8000}`)
 
-			let pluginInfo: OSCDeviceInfo | null = null
 			let oscPort: osc.Port
 
 			switch (config.protocol) {
@@ -161,7 +160,7 @@ export class OSCPluginRemoteService
 					break
 			}
 
-			pluginInfo = {
+			const pluginInfo: OSCDeviceInfo = {
 				rows: config.rows ?? 4,
 				cols: config.cols ?? 8,
 
@@ -172,16 +171,14 @@ export class OSCPluginRemoteService
 				bitmap_height: config.bitmap_height ?? 128,
 			}
 
-			if (pluginInfo != null) {
-				this.emit('surfacesConnected', [
-					{
-						deviceHandle: nanoid(),
-						surfaceId: `osc:${config.protocol}-${config.local_port ?? 8000}`,
-						description: `Generic OSC`,
-						pluginInfo: pluginInfo,
-					},
-				])
-			}
+			this.emit('surfacesConnected', [
+				{
+					deviceHandle: nanoid(),
+					surfaceId: `osc:${config.protocol}-${config.local_port ?? 8000}`,
+					description: `Generic OSC`,
+					pluginInfo: pluginInfo,
+				},
+			])
 		}
 	}
 
