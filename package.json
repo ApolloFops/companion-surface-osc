@@ -26,7 +26,8 @@
 	"dependencies": {
 		"@companion-surface/base": "~1.2.1",
 		"nanoid": "^5.1.11",
-		"osc": "^2.4.5"
+		"osc": "^2.4.5",
+		"sharp": "^0.34.5"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^2.5.0",

@@ -10,6 +10,7 @@ import {
 
 import osc from 'osc'
 import util from 'util'
+import sharp from 'sharp'
 
 import { OSCDeviceInfo } from './main.js'
 import { createControlId } from './util.js'
@@ -169,6 +170,30 @@ export class OSCWrapper implements SurfaceInstance {
 					{
 						type: 's',
 						value: drawProps.color,
+					},
+				],
+			})
+		}
+
+		if (drawProps.image) {
+			const base64_string = (
+				await sharp(drawProps.image, {
+					raw: {
+						width: this.#pluginInfo.bitmap_width,
+						height: this.#pluginInfo.bitmap_height,
+						channels: 4, // RGBA
+					},
+				})
+					.png()
+					.toBuffer()
+			).toString('base64')
+
+			this.#osc.send({
+				address: `/location/${drawProps.controlId}/image`,
+				args: [
+					{
+						type: 's',
+						value: `data:image/png;base64,${base64_string}`,
 					},
 				],
 			})

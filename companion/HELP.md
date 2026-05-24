@@ -22,3 +22,7 @@ I tried to mirror the native Companion OSC protocol for the most part for this.
 
 - `/location/<row>/<column>/color <color>`<br>
   Returns the color of the button at `<row>/<column>` as an RGB hex code, formatted as `#RRGGBB`.
+
+- `/location/<row>/<column>/image <image>`<br>
+  Returns the image of the button at `<row>/<column>` as a Base64 encoded PNG. Only sent when
+  `Enable Button Images` is enabled under the remote surface configuration.

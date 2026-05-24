@@ -18,6 +18,9 @@ export interface OSCConnectionConfig {
 	local_port: number
 	remote_port: number
 	remote_address: string
+	bitmap_enable: boolean
+	bitmap_width: number
+	bitmap_height: number
 }
 
 export class OSCPluginRemoteService
@@ -91,6 +94,30 @@ export class OSCPluginRemoteService
 			default: '127.0.01',
 			regex: Regex.HOSTNAME,
 		},
+		{
+			id: 'bitmap_enable',
+			type: 'checkbox',
+			label: 'Enable Button Images',
+			description: 'This will significantly increase bandwidth usage!',
+			tooltip: 'Sends base64-encoded images for the button tiles as OSC strings.',
+			default: false,
+		},
+		{
+			id: 'bitmap_width',
+			type: 'number',
+			label: 'Button Image Width',
+			default: 128,
+			min: 1,
+			max: 4096,
+		},
+		{
+			id: 'bitmap_height',
+			type: 'number',
+			label: 'Button Image Height',
+			default: 128,
+			min: 1,
+			max: 4096,
+		},
 	]
 
 	readonly checkConfigMatchesExpression: string | null = null
@@ -111,6 +138,11 @@ export class OSCPluginRemoteService
 						rows: config.rows ?? 4,
 						cols: config.cols ?? 8,
 						protocol: 'udp',
+
+						bitmap_enable: config.bitmap_enable ?? false,
+						bitmap_width: config.bitmap_width ?? 128,
+						bitmap_height: config.bitmap_height ?? 128,
+
 						local_port: config.local_port ?? 8000,
 						remote_port: config.remote_port ?? 8001,
 						remote_address: config.remote_address ?? '127.0.0.1',
@@ -122,6 +154,11 @@ export class OSCPluginRemoteService
 						rows: config.rows ?? 4,
 						cols: config.cols ?? 8,
 						protocol: 'tcp-client',
+
+						bitmap_enable: config.bitmap_enable ?? false,
+						bitmap_width: config.bitmap_width ?? 128,
+						bitmap_height: config.bitmap_height ?? 128,
+
 						remote_port: config.remote_port ?? 8001,
 						remote_address: config.remote_address ?? '127.0.0.1',
 					}
@@ -132,6 +169,11 @@ export class OSCPluginRemoteService
 						rows: config.rows ?? 4,
 						cols: config.cols ?? 8,
 						protocol: 'tcp-server',
+
+						bitmap_enable: config.bitmap_enable ?? false,
+						bitmap_width: config.bitmap_width ?? 128,
+						bitmap_height: config.bitmap_height ?? 128,
+
 						local_port: config.local_port ?? 8000,
 					}
 					break

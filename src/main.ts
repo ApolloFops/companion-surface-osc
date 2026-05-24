@@ -9,6 +9,10 @@ export interface OSCBaseDeviceInfo {
 	protocol: string
 	rows: number
 	cols: number
+
+	bitmap_enable: boolean
+	bitmap_width: number
+	bitmap_height: number
 }
 
 export interface OSCUDPDeviceInfo extends OSCBaseDeviceInfo {
@@ -50,7 +54,13 @@ const OSCPlugin: SurfacePlugin<OSCDeviceInfo> = {
 			surface: new OSCWrapper(surfaceId, pluginInfo, context),
 			registerProps: {
 				brightness: false,
-				surfaceLayout: createSurfaceSchema(pluginInfo.rows, pluginInfo.cols),
+				surfaceLayout: createSurfaceSchema(
+					pluginInfo.rows,
+					pluginInfo.cols,
+					pluginInfo.bitmap_enable,
+					pluginInfo.bitmap_width,
+					pluginInfo.bitmap_height,
+				),
 				pincodeMap: null,
 				configFields: null,
 				location: null,
